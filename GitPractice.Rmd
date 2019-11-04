@@ -226,3 +226,5 @@ maxtemp <- max(chicago$tmpd, na.rm = TRUE)
 
 chicago[chicago$tmpd == maxtemp,]
 ```
+
+All of these were done in a google doc, so I'm not going to rewrite it here.
