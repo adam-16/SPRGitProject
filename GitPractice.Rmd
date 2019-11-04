@@ -40,7 +40,7 @@ To answer this question, you will need to:
 Filter the heroes data to only include Marvel or DC. You can also eliminate the DC version of Captain Marvel.
 
 ```{r}
-
+MorDC <- heroes %>% filter((Publisher=='Marvel Comics' | Publisher=='DC Comics') & (name!='Captain Marvel' | Publisher!='DC Comics'))
 ```
 
 
@@ -49,7 +49,7 @@ Filter the heroes data to only include Marvel or DC. You can also eliminate the 
 Create a new variable called "num_powers" in the powers data set counting the number of powers each character has. (This is tricky; there are multiple ways to approach this. You may want to play with the rowSums() function, or see Boern's answer [here](https://stackoverflow.com/questions/28873057/sum-across-multiple-columns-with-dplyr)).
 
 ```{r}
-
+PowersWithSum <- cbind(powers, 'num_powers' = powers %>% select(-hero_names) %>% rowSums(na.rm=TRUE))
 ```
 
 
@@ -60,7 +60,8 @@ Create a new variable called "num_powers" in the powers data set counting the nu
 Join the two data sets together by character name and only keep name, publisher, and number of powers
 
 ```{r}
-
+#Remove NA values because Agent 13 (and possible others) are listed in heroes but not powers. Group by publisher here because it will take less code than doing it in the next step.
+PowByPub <- left_join(MorDC, PowersWithSum, by=c('name'='hero_names')) %>% select(name, Publisher, num_powers) %>% filter(!is.na(num_powers)) %>% group_by(Publisher)
 ```
 
 
@@ -69,7 +70,7 @@ Join the two data sets together by character name and only keep name, publisher,
 Group by publisher and look at the distributions of numbers of powers within each publisher by creating summary tables (min, median, mean, max)
 
 ```{r}
-
+summarise(PowByPub, min(num_powers), median(num_powers), mean(num_powers), max(num_powers))
 ```
 
 
@@ -78,7 +79,9 @@ Group by publisher and look at the distributions of numbers of powers within eac
 Create a graph such as a histogram or boxplot showing the numbers of powers per character for Marvel vs DC. 
 
 ```{r}
+ggplot(data=PowByPub) + geom_boxplot(mapping=aes(y=num_powers, fill=Publisher))
 
+ggplot(data=PowByPub) + geom_histogram(mapping=aes(x=num_powers, fill=Publisher), position='dodge')
 ```
 
 
@@ -86,15 +89,14 @@ Create a graph such as a histogram or boxplot showing the numbers of powers per 
 
 Write a couple sentences to compare the distributions and decide if one publisher seems to have characters with more powers overall.
 
-__Your answer:__
-
+__Your answer:__ Marvel has a lower median, mean, and max power count per character than DC according to this caluclation. This indicates that DC characters tend to have more powers overall than Marvel characters.
 
 
 #### Question 7
 
 Write a couple sentences critiquing this approach. Discuss at least one major problem that prevents our code from actually measuring what we are trying to measure.
 
-__Your answer:__
+__Your answer:__ This approach has a significant flaw in that some heroes may be counted more than once. As seen in question 2a, some heroes appear more than once in the heroes dataset, and, after the join, each of these appearances will have the same powers listed. Thus, each of these heroes will be counted several times, which may skew the data.
 
 
 
@@ -197,5 +199,3 @@ maxtemp <- max(chicago$tmpd, na.rm = TRUE)
 
 chicago[chicago$tmpd == maxtemp,]
 ```
-
-aaaaa
