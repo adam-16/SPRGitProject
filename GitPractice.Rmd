@@ -109,7 +109,8 @@ This is R for Data Science Exercise 5.5.
 1. Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight. (Hint: use modulo arithmetic and integer division; this is tricky!)
 
 ```{r}
-
+flights1=mutate(flights, deptime_minutes=floor(dep_time/100)*60+(dep_time-floor(dep_time/100)*100), scheddeptime_minutes=floor(sched_dep_time/100)*60+(sched_dep_time-floor(sched_dep_time/100)*100))
+head(select(flights1, dep_time, deptime_minutes, sched_dep_time, scheddeptime_minutes))
 ```
 
 #### Question 2
@@ -117,7 +118,13 @@ This is R for Data Science Exercise 5.5.
 2. Compare air_time with arr_time - dep_time. What do you expect to see? What do you see? What do you need to do to fix it? You don't actually need to fix it-- just explain how you would. (Hint: you may need to check the [documentation](https://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236) for the data)
 
 ```{r}
+#First, they are not equal because air_time is in minutes and arr_time and dep_time are in HHMM/HMM.
+head(cbind(flights['air_time'], flights['arr_time']-flights['dep_time']))
 
+#Even adjusting for this, they are not equal. This is most likely because arr_time and dep_time are both in local time (potentially different time zones) but air_time is the actual number of minutes elapsed. However, I would expect a time zone difference to lead to errors in multiples of 60 minutes, which is not the case, so I am not certain.
+flights2=mutate(flights1, arrtime_minutes=floor(arr_time/100)*60+(arr_time-floor(arr_time/100)*100))
+
+head(cbind(flights2['air_time'], flights2['arrtime_minutes']-flights2['deptime_minutes']))
 ```
 
 #### Question 3
@@ -125,7 +132,8 @@ This is R for Data Science Exercise 5.5.
 3. Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?
 
 ```{r}
-
+#I would expect that dep_delay=dep_time-sched_dep_time, which appears to be true
+select(flights, dep_time, sched_dep_time, dep_delay)
 ```
 
 #### Question 4
@@ -133,7 +141,9 @@ This is R for Data Science Exercise 5.5.
 4. Find the 10 most delayed flights using a ranking function. How do you want to handle ties? Carefully read the documentation for min_rank(). 
 
 ```{r}
-
+#Assuming most delayed departure. It would be trivial to modify to arrival delay or departure delay + arrival delay.
+#Ties handled as same rank, skipping subsequent ranks according to number of tied values, e.g., 1st, 2nd, 2nd, 4th, ....
+flights %>% mutate(DelayRank = min_rank(desc(dep_delay))) %>% arrange(DelayRank) %>% select(DelayRank, dep_delay) %>% head(10)
 ```
 
 
