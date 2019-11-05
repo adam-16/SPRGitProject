@@ -172,10 +172,26 @@ ggplot(world, aes(long, lat, group = group)) +
 
 ```{r}
 world=map_data("world")
-HappyMap=left_join(HappyPlanetIndex,world,by=c('Country'='region'))
+#Since HPI and world have different names for some countries, we must rename
+#those countries in one of them to make them appear
+world <- mutate(world, FixedReg=recode(region,
+                                             'USA'='United States of America',
+                                             'Democratic Republic of the Congo'='Congo, Dem. Rep. of the',
+                                             'Republic of Congo'='Congo', #assuming this is true, but I'm not exactly familiar with the politics of Congo
+                                             'Myanmar'='Burma',
+                                             'North Korea'='Korea',
+                                             'South Korea'='Korea',
+                                             'Trinidad'='Trinidad and Tobago',
+                                             'Tobago'='Trinidad and Tobago',
+                                             'UK'='United Kingdom'))
+#Hong Kong is part of China, so one of the data sets does not have data for it
+#and the other does. Leaving it alone. Libya and some other countries don't
+#exist in HappyMap (even if they do in world, as Libya does), so there are no
+#happiness data for these and I can't force them to appear.
+HappyMap=left_join(HappyPlanetIndex,world,by=c('Country'='FixedReg'))
+
 
 ggplot(HappyMap, aes(long, lat, group = group))+geom_polygon(aes(fill = Happiness), color = "white")+scale_fill_viridis_c(option = "C")+coord_quickmap()
-#USA and a couple other countries blank because of different names in world vs. HPI (USA vs. United States of America, for example). Tried to copy the code from the link to rename it, but end up getting a map of *only* the US.
 ```
 
 
